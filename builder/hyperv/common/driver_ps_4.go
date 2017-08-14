@@ -246,7 +246,7 @@ func (d *HypervPS4Driver) verifyPSVersion() error {
 
 	log.Printf("Enter method: %s", "verifyPSVersion")
 	// check PS is available and is of proper version
-	versionCmd := "$host.version.Major"
+	versionCmd := "$PSVersionTable.psversion.Major"
 
 	var ps powershell.PowerShellCmd
 	cmdOut, err := ps.Output(versionCmd)

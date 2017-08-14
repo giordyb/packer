@@ -29,11 +29,34 @@ func (ps *PowerShellCmd) Run(fileContents string, params ...string) error {
 
 // Output runs the PowerShell command and returns its standard output.
 func (ps *PowerShellCmd) Output(fileContents string, params ...string) (string, error) {
+
+	remote := os.Getenv("PACKER_POWERSHELL_REMOTE") != ""
+	remote_host := os.Getenv("PACKER_POWERSHELL_REMOTE_HOST")
+	// remote_user := os.Getenv("PACKER_POWERSHELL_REMOTE_USER") != ""
+	// remote_pw := os.Getenv("PACKER_POWERSHELL_REMOTE_PW") != ""
+
 	path, err := ps.getPowerShellPath()
 	if err != nil {
 		return "", err
 	}
-
+	if remote {
+		postString := ""
+		log.Printf("params: %s", params)
+		if params != nil {
+			psparams := ""
+			for _, psparam := range params {
+				psparams += "\"" + psparam + "\","
+			}
+			psparams = strings.TrimRight(psparams, ",")
+			postString = fmt.Sprintf("} -Argumentlist %s", psparams)
+		} else {
+			postString = "}"
+		}
+		preString := fmt.Sprintf("Invoke-Command -ComputerName %s -ScriptBlock {", remote_host)
+		Contents := fileContents
+		fileContents = fmt.Sprintf("%s %s %s", preString, Contents, postString)
+		log.Printf("fileContents: %s", fileContents)
+	}
 	filename, err := saveScript(fileContents)
 	if err != nil {
 		return "", err
